@@ -28,7 +28,7 @@ public class KeyMachine {
     }
 
     public Optional<String> getTextKey() {
-        Path filePath = Paths.get("key-trysemus.txt");
+        Path filePath = Paths.get("text-key-trysemus.txt");
         try {
             if (Files.exists(filePath) && Files.size(filePath) > 0) {
                 return Optional.of(Files.readString(filePath).toUpperCase());
