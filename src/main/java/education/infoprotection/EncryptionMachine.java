@@ -1,50 +1,63 @@
 package education.infoprotection;
 
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.LinkedHashSet;
-import java.util.Optional;
+import java.util.*;
 
 public class EncryptionMachine {
 
     private final String ALPHABET = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ .";
     private KeyMachine keyMachine = new KeyMachine();
-    private LinkedHashSet<Character> alphabet;
-    private char[][] alphabetMatrix;
+    private String alphabet = "";
 
-    public void encrypt() {
-        System.out.println(keyMachine.getTextKey().get());
-        System.out.println(keyMachine.getTableKey().get());
-        System.out.println(getMessage().get());
-        generateAlphabet(keyMachine.getTableKey().get().get("row"),
-                keyMachine.getTableKey().get().get("column"));
+    public String encrypt() {
+        String message = getMessage().get();
+        int columnCount = keyMachine.getTableKey().get().get("column");
+        generateAlphabet();
+
+        StringBuilder encryptedMessage = new StringBuilder();
+        char[] messageArray = message.toUpperCase().toCharArray();
+        char[] alphabetArray = alphabet.toCharArray();
+
+        for (int i = 0; i < message.length(); i++) {
+            encryptedMessage.append(alphabetArray[(alphabet.indexOf(messageArray[i]) +
+                    columnCount) % alphabet.length()]);
+        }
+
+        printToFile(encryptedMessage.toString());
+        return shuffleKey(alphabet.substring(0, 6));
     }
 
-    private void generateAlphabet(int row, int column) {
-        alphabet = new LinkedHashSet<>();
-        alphabetMatrix = new char[row][column];
+    private String shuffleKey(String key) {
+        List<String> keyToShuffle = Arrays.asList(key.split(""));
+        Collections.shuffle(keyToShuffle);
+        StringBuilder stringBuilder = new StringBuilder();
+        keyToShuffle.forEach(stringBuilder::append);
+        return stringBuilder.toString();
+    }
+
+    private void generateAlphabet() {
+        LinkedHashSet<Character> alphabetHashSet = new LinkedHashSet<>();
 
         if (keyMachine.getTextKey().isPresent()) {
             String textKey = keyMachine.getTextKey().get();
 
             for (char c : textKey.toCharArray()) {
                 if (ALPHABET.indexOf(c) != -1) {
-                    alphabet.add(c);
+                    alphabetHashSet.add(c);
                 }
             }
 
             for (char c : ALPHABET.toCharArray()) {
-                alphabet.add(c);
+                alphabetHashSet.add(c);
             }
 
-            Character[] finalAlphabet = alphabet.toArray(new Character[0]);
-            for (int i = 0, k = 0; i < row; i++) {
-                for (int j = 0; j < column; j++) {
-                    alphabetMatrix[i][j] = finalAlphabet[k++];
-                }
-            }
+            StringBuilder alphabetStringBuilder = new StringBuilder();
+            alphabetHashSet.forEach(alphabetStringBuilder::append);
+            alphabet = alphabetStringBuilder.toString();
         }
     }
 
@@ -54,6 +67,16 @@ public class EncryptionMachine {
             return Optional.of(Files.readString(filepath).toUpperCase());
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    private void printToFile(String encryptedMessage) {
+        String filePath = "encrypted-text-trysemus.txt";
+
+        try (FileWriter fileWriter = new FileWriter(filePath)) {
+            fileWriter.write(encryptedMessage);
+        } catch (IOException e) {
+            throw new RuntimeException();
         }
     }
 }
