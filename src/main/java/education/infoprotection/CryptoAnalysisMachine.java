@@ -11,6 +11,7 @@ public class CryptoAnalysisMachine {
 
     KeyMachine keyMachine = new KeyMachine();
     private final String ALPHABET = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ .";
+    private final String ALPHABETSTATS = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ ";
     private HashMap<String, Double> statistics;
     private String encryptedMessage;
     List<String> keyVariantsList = new ArrayList<>();
@@ -33,14 +34,18 @@ public class CryptoAnalysisMachine {
             countDivergence(decryptedStatistics, key);
         }
         printToFile(decrypt(encryptedMessage, generateAlphabet(divergenceTreeSet.first().getKey()), columnCount));
-        System.out.println(divergenceTreeSet.first().getKey());
+        Divergence divergenceTmp;
+        for (int i = 0; i < 20; i++) {
+            divergenceTmp = divergenceTreeSet.pollFirst();
+            System.out.println("key: " + divergenceTmp.getKey() + ", divergence: " + divergenceTmp.getDivergence());
+        }
     }
 
     private void countDivergence(HashMap<String, Double> decryptedStatistics, String key) {
         Double divergence = 0.0;
         String charStr;
 
-        for (char c : ALPHABET.toCharArray()) {
+        for (char c : ALPHABETSTATS.toCharArray()) {
             charStr = String.valueOf(c).toUpperCase();
             if (decryptedStatistics.get(charStr) <= 0) {
                 continue;
@@ -68,9 +73,10 @@ public class CryptoAnalysisMachine {
         String charStr;
         int decryptedMessageSize = decryptedMessage.length();
 
-        for (char c : ALPHABET.toCharArray()) {
+        for (char c : ALPHABETSTATS.toCharArray()) {
             charStr = String.valueOf(c).toUpperCase();
-                decryptedStatistics.put(charStr, Double.valueOf(charCount.get(charStr)) / decryptedMessageSize);
+                decryptedStatistics.put(charStr,
+                        (charCount.containsKey(charStr) ? Double.valueOf(charCount.get(charStr)) : 0) / decryptedMessageSize);
         }
 
         return decryptedStatistics;
@@ -149,7 +155,6 @@ public class CryptoAnalysisMachine {
     private void initStats() {
         statistics = new HashMap<>();
         statistics.put(" ", 0.175);
-        statistics.put(".", 0.100);
         statistics.put("О", 0.090);
         statistics.put("Е", 0.072);
         statistics.put("Ё", 0.072);
